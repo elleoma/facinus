@@ -635,14 +635,14 @@ cat > /tmp/index.html << EOF
     <div class="variant">
       <span class="label">Using curl:</span>
       <div class="command">
-eval "\$(curl -fsSL http://192.168.0.104/deployment/client_setup.sh)"
+eval "\$(curl -fsSL http://${SERVER_IP}/deployment/client_setup.sh)"
       </div>
     </div>
     
     <div class="variant">
       <span class="label">Using wget:</span>
       <div class="command">
-eval "\$(wget --no-verbose -O- http://192.168.0.104/deployment/client_setup.sh)"
+eval "\$(wget --no-verbose -O- http://${SERVER_IP}/deployment/client_setup.sh)"
       </div>
     </div>
     
