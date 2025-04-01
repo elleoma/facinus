@@ -887,7 +887,7 @@ cat > /tmp/deployment.conf << EOF
 <VirtualHost *:80>
     ServerName ${SERVER_IP}
     ServerAdmin webmaster@localhost
-    DocumentRoot "/srv/http/deployment"
+    DocumentRoot "/srv/http"
     DirectoryIndex index.html
     
     <Directory "/srv/http/deployment">
