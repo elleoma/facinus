@@ -642,7 +642,7 @@ eval "\$(curl -fsSL http://${SERVER_IP}/deployment/client_setup.sh)"
     <div class="variant">
       <span class="label">Using wget:</span>
       <div class="command">
-eval "\$(wget --no-verbose -O- http://${SERVER_IP}/deployment/client_setup.sh)"
+eval "\$(wget -qO- http://${SERVER_IP}/deployment/client_setup.sh)"
       </div>
     </div>
     
@@ -897,7 +897,7 @@ echo "=============================================================="
 echo "Server URL: http://$SERVER_IP/deployment"
 echo "Admin Page: http://$SERVER_IP/deployment/admin.php"
 echo "Admin Password: $ADMIN_PASSWORD"
-echo "Client Setup Command: eval \"\$(wget --no-verbose -O- http://${SERVER_IP}/deployment/client_setup.sh)\""
+echo "Client Setup Command: eval \"\$(curl -fsSL http://$SERVER_IP/deployment/client_setup.sh)\""
 echo "=============================================================="
 echo "Secret Token for accessing logs: $RANDOM_TOKEN"
 echo "=============================================================="
