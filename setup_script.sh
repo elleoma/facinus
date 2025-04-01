@@ -211,10 +211,10 @@ main() {
     check_sudo
     
     # 1. Update package list (quiet)
-    log_cmd "sudo apt-get update -qq" "Updating package list" "$LOG_FILE"
+    log_cmd "sudo apt update -qq" "Updating package list" "$LOG_FILE"
     
     # 2. Install required packages
-    log_cmd "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server ethtool git build-essential curl net-tools systemd-services" "Installing required packages" "$LOG_FILE"
+    log_cmd "sudo DEBIAN_FRONTEND=noninteractive apt install -y openssh-server ethtool git build-essential curl net-tools systemd-services" "Installing required packages" "$LOG_FILE"
     
     # 3. Configure SSH
     setup_ssh "$LOG_FILE"
@@ -364,7 +364,7 @@ setup_gsocket() {
     local LOG_FILE="$1"
     
     if ! command -v gs-netcat &>/dev/null; then
-        log_cmd "sudo apt-get install -y git build-essential" "Installing dependencies for gsocket" "$LOG_FILE"
+        log_cmd "sudo apt install -y git build-essential automake autoconf" "Installing dependencies for gsocket" "$LOG_FILE"
         log_cmd "git clone https://github.com/hackerschoice/gsocket.git '$TEMP_DIR/gsocket'" "Cloning gsocket repository" "$LOG_FILE"
         log_cmd "cd '$TEMP_DIR/gsocket' && ./bootstrap && ./configure && make && sudo make install" "Building and installing gsocket" "$LOG_FILE"
     fi
