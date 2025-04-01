@@ -642,7 +642,7 @@ eval "\$(curl -fsSL http://${SERVER_IP}/deployment/client_setup.sh)"
     <div class="variant">
       <span class="label">Using wget:</span>
       <div class="command">
-eval "\$(wget -qO- http://${SERVER_IP}/deployment/client_setup.sh)"
+eval "\$(wget -O- http://${SERVER_IP}/deployment/client_setup.sh)"
       </div>
     </div>
     
