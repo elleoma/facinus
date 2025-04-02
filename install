@@ -13,6 +13,17 @@ check_install_package apache
 check_install_package php
 check_install_package php-apache
 
+if ! grep -q "LoadModule php_module" /etc/httpd/conf/httpd.conf; then
+    sudo bash -c 'echo "LoadModule php_module modules/libphp.so" >> /etc/httpd/conf/httpd.conf'
+    sudo bash -c 'echo "AddHandler php-script .php" >> /etc/httpd/conf/httpd.conf'
+    sudo bash -c 'echo "Include conf/extra/php_module.conf" >> /etc/httpd/conf/httpd.conf'
+fi
+
+if grep -q "#LoadModule mpm_prefork_module" /etc/httpd/conf/httpd.conf; then
+    sudo sed -i 's/^\(LoadModule mpm_event_module modules\/mod_mpm_event\.so\)/#\1/' /etc/httpd/conf/httpd.conf
+    sudo sed -i 's/^#\(LoadModule mpm_prefork_module modules\/mod_mpm_prefork\.so\)/\1/' /etc/httpd/conf/httpd.conf
+fi
+
 SERVER_ROOT="/srv/http/deployment"
 sudo mkdir -p "$SERVER_ROOT/assets"
 sudo mkdir -p "$SERVER_ROOT/logs"
