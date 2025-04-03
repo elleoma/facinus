@@ -1,4 +1,4 @@
-## FACINUS - set a 24/7 access on a Ubuntu PC you have access to with [gsocket](https://www.gsocket.io/) and other features
+## FACINUS - set a 24/7 access on a Ubuntu/Debian PC you have physical access to with [gsocket](https://www.gsocket.io/) and other features
 
 This script is setting up an Apache server on your Arch based linux distro and targets Ubuntu/Debian.
 
@@ -40,8 +40,9 @@ On the admin panel you can check the logs and the secrets for gsocket access.
 <img src="https://github.com/elleoma/facinus/blob/master/screenshots/admin.png"/>
 
 ## TODO
-- [ ] Add checks for other distros
 - [ ] Fix fake poweroff
+- [ ] Add checks for other distros
 - [ ] Obfuscation, process hiding, etc.
 - [ ] Ability to install common precompiled binaries on a target without root access.
 - [ ] Add options to the script (no root, no services, etc.)
+- [ ] Add a dark theme for the web interface
