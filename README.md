@@ -37,7 +37,7 @@ Secret Token for accessing logs: NTVEYJWTYAk5OolAAKYodaSjPWKaKb4X
 After accessing url you'll see a simple commands to copy and paste on the target.
 On the admin panel you can check the logs and the secrets for gsocket access.
 
-![image](https://github.com/elleoma/facinus/screenshots/admin.png)
+<img src="https://github.com/elleoma/facinus/blob/master/screenshots/admin.png"/>
 
 ## TODO
 - [ ] Add checks for other distros
