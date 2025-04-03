@@ -900,7 +900,6 @@ if ! grep -q "Include conf/extra/deployment.conf" /etc/httpd/conf/httpd.conf; th
     echo "Include conf/extra/deployment.conf" | sudo tee -a /etc/httpd/conf/httpd.conf > /dev/null
 fi
 
-sudo systemctl enable httpd
 sudo systemctl restart httpd
 echo "=============================================================="
 echo "Deployment server setup complete!"
