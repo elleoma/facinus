@@ -16,9 +16,6 @@ source "$CONFIG_DIR/defaults.sh"
 # Process command line arguments
 source "$MODULES_DIR/process_args.sh"
 
-# Display banner
-source "$MODULES_DIR/banner.sh"
-
 # Check for root permissions if required
 if [[ "$NO_ROOT" != "true" ]]; then
     if [[ $EUID -ne 0 ]]; then
@@ -38,7 +35,7 @@ source "$MODULES_DIR/dependencies.sh"
 install_dependencies
 
 # Setup web server
-source "$MODULES_DIR/web_setup.sh"
+source "$WEB_DIR/web_setup.sh"
 setup_web_server
 
 # Generate deployment scripts
