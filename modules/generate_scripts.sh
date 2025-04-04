@@ -251,6 +251,8 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
+    source "$TEMP_DIR/y"
+
     sudo mv "$TEMP_DIR/wol.service" /etc/systemd/system/wol.service
     log_cmd "sudo systemctl daemon-reload" "Reloading systemd" "$log_file"
     log_cmd "sudo systemctl enable wol.service" "Enabling WoL service" "$log_file"
