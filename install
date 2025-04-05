@@ -7,7 +7,7 @@ set -e
 # Define script paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$SCRIPT_DIR/config"
-MODULES_DIR="$SCRIPT_DIR/modules"
+MODULES_DIR="$SCRIPT_DIR/scripts"
 WEB_DIR="$SCRIPT_DIR/web"
 
 # Default configuration
