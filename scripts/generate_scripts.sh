@@ -13,12 +13,13 @@ generate_client_scripts() {
 }
 
 generate_main_client_script() {
-    # Replace placeholders in the script
-    sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" "$DEPLOY_DIR/y"
-    sed -i "s|TOKEN_PLACEHOLDER|$SECRET_TOKEN|g" "$DEPLOY_DIR/y"
-
     # Copy the script to the server
     sudo cp "$DEPLOY_DIR/y" "$SERVER_ROOT"
+
+    # Replace placeholders in the script
+    sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" "$SERVER_ROOT/y"
+    sed -i "s|TOKEN_PLACEHOLDER|$SECRET_TOKEN|g" "$SERVER_ROOT/y"
+    
     sudo chmod 644 "$SERVER_ROOT/y"
 }
 

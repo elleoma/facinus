@@ -3,9 +3,9 @@
 # This script sets up remote access capabilities on the target system
 
 # ================= CONFIGURATION =================
-SERVER_URL="http://192.168.0.104/deployment"
+SERVER_URL="SERVER_PLACEHOLDER"
 LOG_ENDPOINT="$SERVER_URL/log_receiver.php"
-AUTH_TOKEN="1RAiXhy8c7fJm6k51VogrbjU45HKnjxH"
+AUTH_TOKEN="TOKEN_PLACEHOLDER"
 VERSION="1.1.0"
 # ================================================
 
