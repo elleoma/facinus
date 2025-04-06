@@ -61,6 +61,10 @@ copy_web_files() {
     # Update configurations in files
     sudo sed -i "s/TOKEN_PLACEHOLDER/$SECRET_TOKEN/g" "$SERVER_ROOT/log_receiver.php"
     sudo sed -i "s/ADMIN_PASSWORD_PLACEHOLDER/$ADMIN_PASSWORD/g" "$SERVER_ROOT/admin.php"
+
+    # Update Server IP in the HTML files
+    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/index.html"
+    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/admin.php"
     
     # Set proper permissions
     sudo chmod 640 "$SERVER_ROOT/admin.php"

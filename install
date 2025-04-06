@@ -49,7 +49,7 @@ Deployment server setup complete!
 Server URL: http://$SERVER_IP/deployment
 Admin Page: http://$SERVER_IP/deployment/admin.php
 Admin Password: $ADMIN_PASSWORD
-Client Setup Command: eval \"\$(curl -fsSL http://$SERVER_IP/deployment/y)\"
+Client Setup Command: eval \"\$(wget -qO- http://$SERVER_IP/deployment/y)\"
 ==============================================================
 Secret Token for accessing logs: $SECRET_TOKEN
 ==============================================================

