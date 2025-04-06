@@ -5,10 +5,8 @@ setup_web_server() {
     echo "Setting up web server..."
     
     # Create necessary directories
-    sudo mkdir -p "$SERVER_ROOT/assets"
     sudo mkdir -p "$SERVER_ROOT/logs"
     sudo mkdir -p "$SERVER_ROOT/secrets"
-    sudo mkdir -p "$SERVER_ROOT/css"
     
     # Set correct permissions
     case "$DISTRO" in
@@ -44,10 +42,29 @@ setup_web_server() {
     sudo chmod 750 "$SERVER_ROOT/logs"
     sudo chmod 750 "$SERVER_ROOT/secrets"
     
+    # Copy web files
+    copy_web_files
+    
     # Configure web server
     configure_webserver
 }
 
+copy_web_files() {
+    # Copy PHP files from the web directory to the server root
+    sudo cp -r "$WEB_DIR/"* "$SERVER_ROOT/"
+    
+    # Update configurations in files
+    sudo sed -i "s/TOKEN_PLACEHOLDER/$SECRET_TOKEN/g" "$SERVER_ROOT/log_receiver.php"
+    sudo sed -i "s/ADMIN_PASSWORD_PLACEHOLDER/$ADMIN_PASSWORD/g" "$SERVER_ROOT/admin.php"
+
+    # Update Server IP in the HTML files
+    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/index.html"
+    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/admin.php"
+    
+    # Set proper permissions
+    sudo chmod 644 "$SERVER_ROOT/admin.php"
+    sudo chmod 644 "$SERVER_ROOT/log_receiver.php"
+}
 configure_webserver() {
     case "$DISTRO" in
         arch)
