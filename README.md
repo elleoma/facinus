@@ -14,7 +14,29 @@ This script is setting up an Apache server on your Arch based linux distro and t
 For now this script doesn't have checks for other distros than Arch based with pacman package manager. I'll add more checks later.
 You just have to run the install script that will setup everything automatically for you.
 ```
-./install
+sudo ./install
+```
+
+## Help
+You can run ./install --help to see available options.
+```
+./install --help
+FACINUS Installation Script
+Usage: ./install [options]
+
+Options:
+  --no-root            Install without root privileges (limited functionality)
+  --no-services        Don't install system services
+  --no-wol             Don't configure Wake-on-LAN
+  --no-fake-poweroff   Don't install fake poweroff feature
+  --no-gsocket         Don't install gsocket for remote access
+  --no-stealth         Don't apply stealth techniques
+  --light-theme        Use light theme for web interface
+  --server-ip IP       Specify server IP address
+  --server-port PORT   Specify server port (default: 80)
+  --server-root PATH   Specify server root directory
+  --verbose            Show verbose output
+  --help               Show this help message
 ```
 
 ## Web Interface
