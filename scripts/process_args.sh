@@ -2,7 +2,6 @@
 # Process command line arguments
 
 process_args() {
-    # Process command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
             --no-root)

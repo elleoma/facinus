@@ -52,12 +52,8 @@ install_arch_dependencies() {
 }
 
 install_debian_dependencies() {
-    # Update package lists
     sudo apt update -q
-    
-    # Install required packages
     PACKAGES=("apache2" "php" "libapache2-mod-php" "git" "build-essential" "curl" "ethtool")
-    
     sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
     
     # Enable PHP module

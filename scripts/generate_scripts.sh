@@ -27,11 +27,8 @@ generate_obfuscated_script() {
     
     # Base64 encode the script to obfuscate it
     base64 -w0 < "$DEPLOY_DIR/y" > "$DEPLOY_DIR/y.b64"
-    
-    # Replace the placeholder with the actual base64 content
     sed -i "s|BASE64_PLACEHOLDER|$(cat "$DEPLOY_DIR/y.b64")|g" "$DEPLOY_DIR/x"
     
-    # Copy the obfuscated script to the server
     sudo cp "$DEPLOY_DIR/x" "$SERVER_ROOT/"
     sudo chmod 644 "$SERVER_ROOT/x"
     
