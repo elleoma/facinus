@@ -37,11 +37,12 @@ Secret Token for accessing logs: NTVEYJWTYAk5OolAAKYodaSjPWKaKb4X
 After accessing url you'll see a simple commands to copy and paste on the target.
 On the admin panel you can check the logs and the secrets for gsocket access.
 
-<img src="https://github.com/elleoma/facinus/blob/master/screenshots/admin.png"/>
+<img src="https://github.com/elleoma/facinus/blob/beta/screenshots/admin.png"/>
+<img src="https://github.com/elleoma/facinus/blob/beta/screenshots/deployment.png"/>
 
 ## TODO
 - [ ] Fix fake poweroff
-- [ ] Add checks for other distros
+- [*] Add checks for other distros
 - [ ] Obfuscation, process hiding, etc.
 - [ ] Ability to install common precompiled binaries on a target without root access.
 - [ ] Add options to the script (no root, no services, etc.)
