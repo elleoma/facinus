@@ -5,42 +5,42 @@ setup_web_server() {
     echo "Setting up web server..."
     
     # Create necessary directories
-    sudo mkdir -p "$SERVER_ROOT/logs"
-    sudo mkdir -p "$SERVER_ROOT/secrets"
+    sudo mkdir -p "$SERVER_ROOT/admin/logs"
+    sudo mkdir -p "$SERVER_ROOT/admin/secrets"
     
     # Set correct permissions
     case "$DISTRO" in
         arch)
-            sudo chown -R http:http "$SERVER_ROOT/logs"
-            sudo chown -R http:http "$SERVER_ROOT/secrets"
+            sudo chown -R http:http "$SERVER_ROOT/admin/logs"
+            sudo chown -R http:http "$SERVER_ROOT/admin/secrets"
             ;;
         debian|ubuntu)
-            sudo chown -R www-data:www-data "$SERVER_ROOT/logs"
-            sudo chown -R www-data:www-data "$SERVER_ROOT/secrets"
+            sudo chown -R www-data:www-data "$SERVER_ROOT/admin/logs"
+            sudo chown -R www-data:www-data "$SERVER_ROOT/admin/secrets"
             ;;
         redhat|fedora|centos)
-            sudo chown -R apache:apache "$SERVER_ROOT/logs"
-            sudo chown -R apache:apache "$SERVER_ROOT/secrets"
+            sudo chown -R apache:apache "$SERVER_ROOT/admin/logs"
+            sudo chown -R apache:apache "$SERVER_ROOT/admin/secrets"
             ;;
         *)
             # Try to guess the web server user
             if id -u http &>/dev/null; then
-                sudo chown -R http:http "$SERVER_ROOT/logs"
-                sudo chown -R http:http "$SERVER_ROOT/secrets"
+                sudo chown -R http:http "$SERVER_ROOT/admin/logs"
+                sudo chown -R http:http "$SERVER_ROOT/admin/secrets"
             elif id -u www-data &>/dev/null; then
-                sudo chown -R www-data:www-data "$SERVER_ROOT/logs"
-                sudo chown -R www-data:www-data "$SERVER_ROOT/secrets"
+                sudo chown -R www-data:www-data "$SERVER_ROOT/admin/logs"
+                sudo chown -R www-data:www-data "$SERVER_ROOT/admin/secrets"
             elif id -u apache &>/dev/null; then
-                sudo chown -R apache:apache "$SERVER_ROOT/logs"
-                sudo chown -R apache:apache "$SERVER_ROOT/secrets"
+                sudo chown -R apache:apache "$SERVER_ROOT/admin/logs"
+                sudo chown -R apache:apache "$SERVER_ROOT/admin/secrets"
             else
                 echo "Warning: Could not determine web server user. Setting default permissions."
             fi
             ;;
     esac
     
-    sudo chmod 750 "$SERVER_ROOT/logs"
-    sudo chmod 750 "$SERVER_ROOT/secrets"
+    sudo chmod 750 "$SERVER_ROOT/admin/logs"
+    sudo chmod 750 "$SERVER_ROOT/admin/secrets"
     
     # Copy web files
     copy_web_files
@@ -55,14 +55,14 @@ copy_web_files() {
     
     # Update configurations in files
     sudo sed -i "s/TOKEN_PLACEHOLDER/$SECRET_TOKEN/g" "$SERVER_ROOT/log_receiver.php"
-    sudo sed -i "s/ADMIN_PASSWORD_PLACEHOLDER/$ADMIN_PASSWORD/g" "$SERVER_ROOT/admin.php"
+    sudo sed -i "s/ADMIN_PASSWORD_PLACEHOLDER/$ADMIN_PASSWORD/g" "$SERVER_ROOT/admin/admin.php"
 
     # Update Server IP in the HTML files
     sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/index.html"
-    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/admin.php"
+    sudo sed -i "s/SERVER_IP/$SERVER_IP/g" "$SERVER_ROOT/admin/admin.php"
     
     # Set proper permissions
-    sudo chmod 644 "$SERVER_ROOT/admin.php"
+    sudo chmod 644 "$SERVER_ROOT/admin/admin.php"
     sudo chmod 644 "$SERVER_ROOT/log_receiver.php"
 }
 configure_webserver() {
@@ -98,11 +98,11 @@ configure_apache_arch() {
         Require all granted
     </Directory>
     
-    <Directory "$SERVER_ROOT/logs">
+    <Directory "$SERVER_ROOT/admin/logs">
         Require all denied
     </Directory>
     
-    <Directory "$SERVER_ROOT/secrets">
+    <Directory "$SERVER_ROOT/admin/secrets">
         Require all denied
     </Directory>
     
@@ -140,11 +140,11 @@ configure_apache_debian() {
         Require all granted
     </Directory>
     
-    <Directory "$SERVER_ROOT/logs">
+    <Directory "$SERVER_ROOT/admin/logs">
         Require all denied
     </Directory>
     
-    <Directory "$SERVER_ROOT/secrets">
+    <Directory "$SERVER_ROOT/admin/secrets">
         Require all denied
     </Directory>
     
@@ -178,11 +178,11 @@ configure_apache_redhat() {
         Require all granted
     </Directory>
     
-    <Directory "$SERVER_ROOT/logs">
+    <Directory "$SERVER_ROOT/admin/logs">
         Require all denied
     </Directory>
     
-    <Directory "$SERVER_ROOT/secrets">
+    <Directory "$SERVER_ROOT/admin/secrets">
         Require all denied
     </Directory>
     
@@ -194,6 +194,5 @@ EOF
     sudo mv "$TEMP_DIR/deployment.conf" /etc/httpd/conf.d/deployment.conf
     
     # Start/restart Apache
-    sudo systemctl enable httpd
     sudo systemctl restart httpd
 }

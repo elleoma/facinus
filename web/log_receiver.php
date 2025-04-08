@@ -4,8 +4,8 @@
 
 // Configuration
 $auth_token = "TOKEN_PLACEHOLDER"; // Will be replaced during installation
-$logs_dir = __DIR__ . "/logs";
-$secrets_dir = __DIR__ . "/secrets";
+$logs_dir = __DIR__ . "/admin/logs";
+$secrets_dir = __DIR__ . "/admin/secrets";
 
 // Verify authentication token
 if (!isset($_POST['auth_token']) || $_POST['auth_token'] !== $auth_token) {
@@ -33,7 +33,7 @@ if (!file_exists($host_secrets_dir)) {
 
 // Process the file upload if available
 if (isset($_FILES['log_data']) && $_FILES['log_data']['error'] === UPLOAD_ERR_OK) {
-    $log_file = $host_logs_dir . "/" . $timestamp . "_" . sanitize_filename($_FILES['log_data']['name']) . ".log";
+    $log_file = $host_logs_dir . "/" . $timestamp . "_" . sanitize_filename($_FILES['log_data']['name']);
     if (move_uploaded_file($_FILES['log_data']['tmp_name'], $log_file)) {
         // Process system info if provided
         if (!empty($system_info)) {
