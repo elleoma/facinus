@@ -56,9 +56,6 @@ install_debian_dependencies() {
     PACKAGES=("apache2" "php" "libapache2-mod-php" "git" "build-essential" "curl" "ethtool")
     sudo DEBIAN_FRONTEND=noninteractive apt install -y "${PACKAGES[@]}"
     
-    # Enable PHP module
-    sudo a2enmod php
-    
     # Enable Apache modules
     sudo a2enmod rewrite
 }
