@@ -202,7 +202,9 @@ if ($authenticated && isset($_GET['host'])) {
                                                     > <?php echo htmlspecialchars(str_replace('_', ' ', $type)); ?>
                                                 </div>
                                                 <div class="command">
-                                                    <?php echo htmlspecialchars($value); ?>
+                                                    <div class="secret-content">
+                                                        <?php echo htmlspecialchars($value); ?>
+                                                    </div>
                                                     <button class="copy-btn" data-clipboard="<?php echo htmlspecialchars($value); ?>">
                                                         copy
                                                     </button>

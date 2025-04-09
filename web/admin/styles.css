@@ -179,47 +179,46 @@ button:hover, .action-btn:hover {
     color: var(--secondary);
 }
 
-.secrets {
-    padding: 10px;
-}
-
+/* Fix for secrets layout */
 .secret {
-    margin-bottom: 10px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 0, 0.05);
-}
-
-.secret-title {
-    border-bottom: 1px dashed var(--border);
-    padding: 5px 8px;
-    font-size: 0.9em;
-    color: var(--text-dim);
+    margin-bottom: 15px;
 }
 
 .command {
+    display: flex;
+    align-items: flex-start;
+    background-color: #111;
     padding: 8px;
-    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.secret-content {
+    flex: 1;
+    word-break: break-all;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-family: monospace;
+    max-width: calc(100% - 70px);
     overflow-x: auto;
-    white-space: pre;
-    font-family: 'Courier New', monospace;
 }
 
 .copy-btn {
-    position: absolute;
-    right: 5px;
-    top: 5px;
-    background: transparent;
-    color: var(--secondary);
-    border: 1px solid var(--border);
-    padding: 2px 5px;
+    flex: 0 0 60px;
+    margin-left: 10px;
+    align-self: flex-start;
+    background: #333;
+    color: #0f0;
+    border: 1px solid #444;
+    padding: 4px 8px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 12px;
-    width: auto;
+    font-family: monospace;
+    text-transform: lowercase;
 }
 
 .copy-btn:hover {
-    background: var(--hover);
-    color: var(--text);
+    background: #444;
 }
 
 .alert {
