@@ -63,7 +63,6 @@ On the admin panel you can check the logs and the secrets for gsocket access.
 <img src="https://github.com/elleoma/facinus/blob/beta/screenshots/admin.png"/>
 
 ## TODO
-- [ ] fix path traversal vulnerability
 - [ ] Do fake poweroff for all possible variants for Ubuntu/Debian with gnome.
 - [x] Add checks for other distros
 - [ ] Obfuscation, process hiding, etc.
