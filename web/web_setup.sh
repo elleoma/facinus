@@ -91,6 +91,7 @@ configure_apache_arch() {
     ServerAdmin webmaster@localhost
     DocumentRoot "/srv/http"
     DirectoryIndex index.html
+    RedirectMatch 301 ^/$ http://$SERVER_IP/deployment/
     
     <Directory "$SERVER_ROOT">
         Options -Indexes +FollowSymLinks
@@ -119,7 +120,6 @@ EOF
     fi
     
     # Start/restart Apache
-    sudo systemctl enable httpd
     sudo systemctl restart httpd
 }
 
@@ -131,6 +131,7 @@ configure_apache_debian() {
     ServerAdmin webmaster@localhost
     DocumentRoot "/var/www/html"
     DirectoryIndex index.html
+    RedirectMatch 301 ^/$ http://$SERVER_IP/deployment/
     
     Alias /deployment $SERVER_ROOT
     
@@ -157,7 +158,6 @@ EOF
     sudo a2ensite deployment
     
     # Start/restart Apache
-    sudo systemctl enable apache2
     sudo systemctl restart apache2
 }
 
@@ -169,6 +169,7 @@ configure_apache_redhat() {
     ServerAdmin webmaster@localhost
     DocumentRoot "/var/www/html"
     DirectoryIndex index.html
+    RedirectMatch 301 ^/$ http://$SERVER_IP/deployment/
     
     Alias /deployment $SERVER_ROOT
     
