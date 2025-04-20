@@ -14,13 +14,13 @@ generate_client_scripts() {
 
 generate_main_client_script() {
     # Copy the script to the server
-    sudo cp "$DEPLOY_DIR/y" "$SERVER_ROOT"
+    cp "$DEPLOY_DIR/y" "$SERVER_ROOT"
 
     # Replace placeholders in the script
     sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" "$SERVER_ROOT/y"
     sed -i "s|TOKEN_PLACEHOLDER|$SECRET_TOKEN|g" "$SERVER_ROOT/y"
     
-    sudo chmod 644 "$SERVER_ROOT/y"
+    chmod 644 "$SERVER_ROOT/y"
 }
 
 generate_obfuscated_script() {
@@ -28,10 +28,10 @@ generate_obfuscated_script() {
     
     # Base64 encode the script to obfuscate it
     base64 -w0 < "$DEPLOY_DIR/y" > "$DEPLOY_DIR/y.b64"
-    sed -i "s|BASE64_PLACEHOLDER|$(cat "$DEPLOY_DIR/y.b64")|g" "$DEPLOY_DIR/x"
     
-    sudo cp "$DEPLOY_DIR/x" "$SERVER_ROOT/"
-    sudo chmod 644 "$SERVER_ROOT/x"
+    cp "$DEPLOY_DIR/x" "$SERVER_ROOT/"
+    sed -i "s|y.b64|$(cat $SERVER_ROOT/y.b64)|g" "$SERVER_ROOT/x"
+    chmod 644 "$SERVER_ROOT/x"
     
     echo "Obfuscated script created."
 }
@@ -42,8 +42,8 @@ generate_presets() {
     # Replace placeholders
     for preset in "$DEPLOY_DIR/minimal" "$DEPLOY_DIR/full" "$DEPLOY_DIR/quiet"; do
         sed -i "s|SERVER_PLACEHOLDER|$SERVER_IP|g" "$preset"
-        sudo cp "$preset" "$SERVER_ROOT/"
-        sudo chmod 644 "$SERVER_ROOT/$(basename "$preset")"
+        cp "$preset" "$SERVER_ROOT/"
+        chmod 644 "$SERVER_ROOT/$(basename "$preset")"
     done
     
     echo "Installation presets created."
