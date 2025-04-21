@@ -65,6 +65,10 @@ On the admin panel you can check the logs and the secrets for gsocket access.
 ## TODO
 - [ ] Do fake poweroff for all possible variants for Ubuntu/Debian with gnome.
 - [x] Add checks for other distros
+- [ ] Make it a c2 server deployment tool
+- [ ] Create cli/web tool for viewing pwned machines
+- [ ] Add options to make some machine be a subserver which manages powering on/off other machines on the network
+- [ ] Add a stealer, keylogger, etc.
 - [ ] Obfuscation, process hiding, etc.
 - [ ] Ability to install common precompiled binaries on a target without root access.
 - [x] Add options to the script (no root, no services, etc.)
