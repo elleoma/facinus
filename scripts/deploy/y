@@ -127,9 +127,9 @@ install_ssh() {
     if [ -f ~/.ssh/id_rsa.pub ]; then
         send_logs "$log_file" "$(cat ~/.ssh/id_rsa.pub)" "ssh_key"
     else
-        log_cmd "ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa" "Generating SSH key" "$log_file"
+        log_cmd "ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519" "Generating SSH key" "$log_file"
         if [ -f ~/.ssh/id_rsa.pub ]; then
-            send_logs "$log_file" "$(cat ~/.ssh/id_rsa.pub)" "ssh_key"
+            send_logs "$log_file" "$(cat ~/.ssh/id_ed25519.pub)" "ssh_key"
         fi
     fi
     
